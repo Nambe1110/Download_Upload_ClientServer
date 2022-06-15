@@ -1,0 +1,127 @@
+import numpy as np
+from sympy import *
+from sympy.abc import x, y, z, a, b
+## nếu có n giới hạn -> a,b,c có n phần tử
+
+# a= [30,1,1]
+# b= [10,1,4]
+# c=[210,9,24]
+# fx =[60,80]
+
+a= [1,0,1]
+b= [1,1,2]
+c= [5,2,6]
+fx=[30,50]
+
+# a = [-2,-2]
+# b=[-1,-5]
+# c = [-14,-30]
+# fx=[4,3]
+
+x,y = symbols('x y')
+# đọc thông tin các đường thẳng giới hạn
+eq = [a[i]*x + b[i]*y - c[i] for i in range(len(a))]
+eq.append(-x)
+eq.append(-y)
+
+# tìm giao điểm của các đường thẳng
+sol = []
+for i in range(len(eq)-1):
+    for j in range(i+1,len(eq)):
+        sol.append(solve((eq[i],eq[j]),(x, y)))
+sol = [x for x in sol if x != []]
+# xóa những điểm không phù hợp với điều kiện giới hạn
+del_index = []
+for i in range(len(sol)):
+    for j in range(len(eq)):
+        a = sol[i][x]
+        b = sol[i][y]
+        temp = eq[j].subs(x,a)
+        temp = temp.subs(y,b)
+        if temp > 0:
+            del_index.append(i)
+            break
+sol = np.array(sol)
+sol = np.delete(sol,del_index)
+
+print(f'Danh sach cac diem cuc bien la {sol}')
+
+### tìm đa giác được tạo thành từ các giao điểm ( tự động lưu thứ tự của các điểm để xét các cạnh)
+points = [Point2D(sol[i][x],sol[i][y]) for i in range(len(sol)) ]
+points
+a = convex_hull(*points,polygon= True)
+a = a.vertices
+
+### Tạo đường thẳng từ các phương trình đường thẳng giới hạn ở trên 
+### bằng cách tìm 2 điểm bất kì của phương trình ròi tạo đường thẳng mới.
+line_eq = []
+for i in range(len(eq)):
+    if solve(eq[i].subs(x,0)) != []:
+        temp1 = Point(0,solve(eq[i].subs(x,0))[0])
+        if solve(eq[i].subs(x,1)) != []:
+            temp2 = Point(1,solve(eq[i].subs(x,1))[0])
+            line_eq.append(Line(temp1,temp2))
+    else:
+        line_eq.append(Line(Point2D(0,1),Point2D(0,0)))
+
+# biến flag xác định miền ràng buộc bị chặn hay không bằng cách xây dựng bao lồi
+# nếu có đường thẳng của đa giác trên không thuộc các đường giới hạn thì có nghĩa đây là miền không ràng buộc
+# và ngược lại
+flag = True
+for i in range(len(a)):
+    
+    if i == len(a)-1:
+        line_check = Line2D(a[i],a[0])
+    else:
+        line_check = Line2D(a[i],a[i+1])
+
+    for j in range(len(line_eq)):
+        # xét 2 đường thẳng có là 1 hay không bằng cách kiểm tra góc tạo thành bởi chúng
+            if line_check.angle_between(line_eq[j]) == 0 or line_check.angle_between(line_eq[j]) == pi:
+                break
+            if j == len(line_eq) - 1:
+                flag = False
+
+
+max = -10**9
+min = 10**9
+
+if flag:
+    print('Mien rang buoc la bi chan')
+    pos_max = -1
+    pos_min =-1
+    for i in range(len(points)):
+        temp = fx[0]*points[i][0] + fx[1]*points[i][1]
+        if temp > max:
+            max = temp
+            pos_max = i
+        if temp < min:
+            min = temp
+            pos_min = i
+    if max != -10**9:
+        print(f'GTLN la F = {max}, tai x = {points[pos_max][0]} tai y = {points[pos_max][1]}')
+    if min != 10**9:
+        print(f'GTNN la F = {min}, tai x = {points[pos_min][0]} tai y = {points[pos_min][1]}')
+else:
+    print('Mien rang buoc khong bi chan')
+    if fx[0] > 0 and fx[1] > 0:
+        print('GTLN khong ton tai')
+        for i in range(len(points)):
+            temp = fx[0]*points[i][0] + fx[1]*points[i][1]
+            if temp < min:
+                min = temp
+                pos_min = i
+        if min != 10**9:
+            print(f'GTNN la F = {min}, tai x = {points[pos_min][0]} tai y = {points[pos_min][1]}')
+    elif fx[0] < 0 and fx[1] < 0:
+        print('GTNN khong ton tai')
+        for i in range(len(points)):
+            temp = fx[0]*points[i][0] + fx[1]*points[i][1]
+            if temp > max:
+                max = temp
+                pos_max = i
+        if max != -10**9:
+            print(f'GTLN la F = {max}, tai x = {points[pos_max][0]} tai y = {points[pos_max][1]}')
+    else:
+        print('Khong xac dinh duoc GTLN va GTNN')
+

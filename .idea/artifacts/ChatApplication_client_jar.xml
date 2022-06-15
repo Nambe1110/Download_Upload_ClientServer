@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="ChatApplication_client:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/ChatApplication_client_jar</output-path>
+    <root id="archive" name="ChatAplication_client.jar">
+      <element id="module-output" name="ClientServer" />
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/src/hcmus/java/client/META-INF/MANIFEST.MF" />
+        <element id="file-copy" path="$PROJECT_DIR$/src/client/META-INF/MANIFEST.MF" />
+      </element>
+    </root>
+  </artifact>
+</component>
